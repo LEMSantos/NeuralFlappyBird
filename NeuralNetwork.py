@@ -2,34 +2,31 @@ import random
 import math
 
 class NeuralNetwork:
-    def __init__(self, layers):
+    def __init__(self,architecture):
         self.Network = []
-        for i in range(1, len(layers)):
+        for i in range(1,len(architecture)):
             self.Network.append([])
-            for j in range(layers[i]):
+            for j in range(architecture[i]):
                 self.Network[i-1].append([])
-                for k in range(layers[i-1]):
+                for k in range(architecture[i-1]+1):
                     self.Network[i-1][j].append(random.random())
 
     def getNetwork(self):
-        return self.Network.copy()
+        return self.Network
 
-    def setNetwork(self, network):
-        self.Network = network.copy()
-
-    def sigmoid_logistic(self, x):
+    def sigmoidLogistic(self,x):
         return 1/(1 + math.e**(-x))
-
-    def activateNeuron(self, weights, inputs):
+    
+    def activateNeuron(self,weights,inputs):
         signal = weights[0]*(-1)
         for i in range(1,len(weights)):
             signal += weights[i]*inputs[i-1]
-        return self.sigmoid_logistic(signal)
+        return self.sigmoidLogistic(signal)
 
-    def feedForward(self, inputs):
+    def feedForward(self,inputs):
         for layer in self.Network:
             inputs_aux = []
             for neuron in layer:
                 inputs_aux.append(self.activateNeuron(neuron,inputs))
-            inputs = inputs_aux.copy()
-        return inputs.copy()
+            inputs = inputs_aux
+        return inputs

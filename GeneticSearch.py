@@ -1,85 +1,68 @@
-import NeuralNetwork as nn
+from NeuralNetwork import NeuralNetwork
 import random
-#import numpy as np
 
 class GeneticSearch:
-    def __init__(self, crossoverRate, mutationRate, populationSize, neuralConfiguration):
+    def __init__(self, populationSize, crossoverRate, mutationRate, architecture):
+        self.populationSize = populationSize
         self.crossoverRate = crossoverRate
         self.mutationRate = mutationRate
-        self.populationSize = populationSize
-        self.neuralConfiguration = neuralConfiguration
+        self.architecture = architecture
         self.population = []
+
         for i in range(populationSize):
-            self.population.append(nn.NeuralNetwork(neuralConfiguration))
+            self.population.append(NeuralNetwork(architecture))
 
     def getPopulation(self):
-        return self.population.copy()
+        return self.population
 
-    def mutation(self,new_population):
-        new_population_aux = new_population[:]
-        for i in range(len(new_population_aux)):
-            network_aux = new_population_aux[i].getNetwork()
-            for layer in network_aux:
-                for neuron in layer:
-                    for k in range(len(neuron)):
-                        if random.random() <= self.mutationRate:
-                            neuron[k] += random.gauss(0,1)
-            new_population_aux[i].setNetwork(network_aux)
-        return new_population_aux.copy()
+    def mutation(self,population):
+            for individual in population:
+                network = individual.getNetwork()
+                for layer in network:
+                    for neuron in layer:
+                        for i in range(len(neuron)):
+                            if random.random() < self.mutationRate:
+                                neuron[i] += random.gauss(0,1)
 
-    def crossOver(self, p1, p2):
+    def crossOver(self,p1,p2):
         alpha = random.random()
-        f1 = nn.NeuralNetwork([self.neuralConfiguration])
-        f2 = nn.NeuralNetwork([self.neuralConfiguration])
-        f1.setNetwork(p1.getNetwork())
-        f2.setNetwork(p2.getNetwork())
-        if random.random() <= self.crossoverRate:
-            p1_aux = p1.getNetwork()
-            p2_aux = p2.getNetwork()
-            f1_aux = f1.getNetwork()
-            f2_aux = f2.getNetwork()
-            for i in range(len(p1_aux)):
-                for j in range(len(p1_aux[i])):
-                    for k in range(len(p1_aux[i][j])):
-                        f1_aux[i][j][k] = alpha*p1_aux[i][j][k] + (1-alpha)*p2_aux[i][j][k]
-                        f2_aux[i][j][k] = (1-alpha)*p1_aux[i][j][k] + alpha*p2_aux[i][j][k]
-            f1.setNetwork(f1_aux)
-            f2.setNetwork(f2_aux)
-            
-        return f1,f2
-
-    def reproduction(self, parents_list):
-        new_population = []
-        for i in range(1,len(parents_list),2):
-            children = self.crossOver(parents_list[i-1],parents_list[i])
-            for j in range(2):
-                new_population.append(children[j])
-        new_population = self.mutation(new_population)
-        return new_population.copy()
-
+        f1 = NeuralNetwork(self.architecture)
+        f2 = NeuralNetwork(self.architecture)
+        if random.random() < self.crossoverRate:
+            for i in range(len(f1.getNetwork())):
+                for j in range(len(f1.getNetwork()[i])):
+                    for k in range(len(f1.getNetwork()[i][j])):
+                        f1.getNetwork()[i][j][k] = alpha * p1.getNetwork()[i][j][k] + (1-alpha) * p2.getNetwork()[i][j][k]
+                        f2.getNetwork()[i][j][k] = alpha * p2.getNetwork()[i][j][k] + (1-alpha) * p1.getNetwork()[i][j][k]
+            return (f1,f2)
+        else:
+            return(p1,p2)
+                        
     def selection(self,fitness):
-        F = sum(fitness)
-        probs = []
-        acum_probs = []
-        index_pop = []
         parents_list = []
-        for i in range(len(fitness)):
-            probs.append(fitness[i]/F)
-            if i > 0:
-                acum_probs.append(probs[i] + acum_probs[i-1])
-            else:
-                acum_probs.append(probs[i])
+        F = sum(fitness)
+        acum_prob = [fitness[0]/F]
+        for i in range(1,len(fitness)):
+            acum_prob.append(fitness[i]/F + acum_prob[i-1])
         for i in range(len(fitness)):
             index = 0
             num = random.random()
-            for j in range(len(acum_probs)):
-                if acum_probs[j] >= num:
-                    index = j
-                    break
+            while(acum_prob[index] < num):
+                index+=1
             parents_list.append(self.population[index])
-        return parents_list.copy()
+        return parents_list
 
-    def evolution(self, fitness):
+    def reproduction(self,parents_list):
+        newPopulation = []
+
+        for i in range(1,len(parents_list),2):
+            childrens = self.crossOver(parents_list[i],parents_list[i-1])
+            for children in childrens:
+                newPopulation.append(children)
+        self.mutation(newPopulation)
+        
+        return newPopulation
+
+    def evolution(self,fitness):
         parents_list = self.selection(fitness)
         self.population = self.reproduction(parents_list)
-
