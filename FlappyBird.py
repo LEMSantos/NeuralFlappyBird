@@ -6,7 +6,7 @@ from GeneticSearch import GeneticSearch
 WIDTH = 288
 HEIGHT = 512
 FPS = 30
-POPULATION_SIZE = 10
+POPULATION_SIZE = 100
 MAX_UP_SPEED = -8
 MAX_DOWN_SPEED = 15
 PIPE_SPEED = -5
@@ -18,7 +18,7 @@ clock = pygame.time.Clock()
 birds = []
 pipes = []
 fitness = []
-solutions = GeneticSearch(POPULATION_SIZE,0.8,0.2,[2,6,6,1])
+solutions = GeneticSearch(POPULATION_SIZE,0.8,0.15,[2,6,6,1])
 
 for i in range(POPULATION_SIZE):
     birds.append({'x': 75, 'y': HEIGHT//3, 'alive': True, 'color':(randint(0,255),randint(0,255),randint(0,255)), 'speed_y': 0})
@@ -28,7 +28,7 @@ for i in range(3):
     if i == 0:
         pipes.append(({'x': WIDTH, 'y': 0, 'width': 50, 'height': rand_size},{'x': WIDTH, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
     else:
-        pipes.append(({'x': pipes[i-1][0]['x'] + 220, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 220, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+        pipes.append(({'x': pipes[i-1][0]['x'] + 200, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 200, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
 
 for i in range(POPULATION_SIZE):
     fitness.append(1)
@@ -47,7 +47,7 @@ def restart():
         if i == 0:
             pipes.append(({'x': WIDTH, 'y': 0, 'width': 50, 'height': rand_size},{'x': WIDTH, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
         else:
-            pipes.append(({'x': pipes[i-1][0]['x'] + 220, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 220, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+            pipes.append(({'x': pipes[i-1][0]['x'] + 200, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 200, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
 
 
 def birds_alive():
@@ -67,8 +67,7 @@ def colision_bird():
             continue
         for pipe in pipes:
             if pipe[0]['hitbox'].colliderect(birds[i]['hitbox']) or pipe[1]['hitbox'].colliderect(birds[i]['hitbox']):
-                birds[i]['alive'] = False
-                return                                                                                            
+                birds[i]['alive'] = False                                                                                            
 
 def colision_pixel(bird,pipe):
     if (pipe['x'] < bird['x']-40 < (pipe['x'] + pipe['width'])) and (pipe['y'] < bird['y']-40 < (pipe['y'] + pipe['height'])):
@@ -108,7 +107,7 @@ while running:
     if pipes[0][0]['x'] <= -100:
         rand_size = randint(50,242)
         pipes.pop(0)
-        pipes.append(({'x': pipes[1][0]['x'] + 220, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[1][0]['x'] + 220, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+        pipes.append(({'x': pipes[1][0]['x'] + 200, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[1][0]['x'] + 200, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
 
     #draw
     screen.fill((255,255,255))
