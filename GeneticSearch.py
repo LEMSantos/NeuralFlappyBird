@@ -1,5 +1,6 @@
 from NeuralNetwork import NeuralNetwork
 import random
+import numpy as np
 
 class GeneticSearch:
     def __init__(self, populationSize, crossoverRate, mutationRate, architecture):
@@ -22,18 +23,19 @@ class GeneticSearch:
                     for neuron in layer:
                         for i in range(len(neuron)):
                             if random.random() < self.mutationRate:
-                                neuron[i] += random.gauss(0,1)
+                                neuron[i] += random.gauss(0,np.std(neuron))
 
     def crossOver(self,p1,p2):
-        alpha = random.random()
+        alpha = 0.5
+        
         f1 = NeuralNetwork(self.architecture)
         f2 = NeuralNetwork(self.architecture)
         if random.random() < self.crossoverRate:
             for i in range(len(f1.getNetwork())):
                 for j in range(len(f1.getNetwork()[i])):
                     for k in range(len(f1.getNetwork()[i][j])):
-                        f1.getNetwork()[i][j][k] = alpha * p1.getNetwork()[i][j][k] + (1-alpha) * p2.getNetwork()[i][j][k]
-                        f2.getNetwork()[i][j][k] = alpha * p2.getNetwork()[i][j][k] + (1-alpha) * p1.getNetwork()[i][j][k]
+                        f1.getNetwork()[i][j][k] = p1.getNetwork()[i][j][k] + (p2.getNetwork()[i][j][k] - p1.getNetwork()[i][j][k])*random.uniform(-alpha,1+alpha)
+                        f2.getNetwork()[i][j][k] = p1.getNetwork()[i][j][k] + (p2.getNetwork()[i][j][k] - p1.getNetwork()[i][j][k])*random.uniform(-alpha,1+alpha)
             return (f1,f2)
         else:
             return(p1,p2)
@@ -52,10 +54,19 @@ class GeneticSearch:
             parents_list.append(self.population[index])
         return parents_list
 
-    def reproduction(self,parents_list):
+    def reproduction(self,parents_list,fitness):
         newPopulation = []
-
-        for i in range(1,len(parents_list),2):
+        index_max1 = 0
+        index_max2 = 0
+        for i in range(len(fitness)):
+            if fitness[index_max1] < fitness[i]:
+                index_max1 = i
+        newPopulation.append(self.population[index_max1])
+        for i in range(len(fitness)):
+            if fitness[index_max2] < fitness[i] < fitness[index_max1]:
+                index_max2 = i
+        newPopulation.append(self.population[index_max2])
+        for i in range(1,len(parents_list)-2,2):
             childrens = self.crossOver(parents_list[i],parents_list[i-1])
             for children in childrens:
                 newPopulation.append(children)
@@ -64,5 +75,5 @@ class GeneticSearch:
         return newPopulation
 
     def evolution(self,fitness):
-        parents_list = self.selection(fitness)
-        self.population = self.reproduction(parents_list)
+        parents_list = self.selection(fitness.copy())
+        self.population = self.reproduction(parents_list,fitness.copy())

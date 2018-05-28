@@ -6,19 +6,30 @@ from GeneticSearch import GeneticSearch
 WIDTH = 288
 HEIGHT = 512
 FPS = 30
-POPULATION_SIZE = 100
-MAX_UP_SPEED = -8
+POPULATION_SIZE = 20
+MAX_UP_SPEED = -9
 MAX_DOWN_SPEED = 15
-PIPE_SPEED = -5
+PIPE_SPEED = -4
 
 pygame.init()
+pygame.font.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("Flappy Bird")
 clock = pygame.time.Clock()
 birds = []
 pipes = []
 fitness = []
-solutions = GeneticSearch(POPULATION_SIZE,0.8,0.15,[2,6,6,1])
+generation = 1
+birds_alive_num = POPULATION_SIZE
+solutions = GeneticSearch(POPULATION_SIZE,0.8,0.08,[2,6,1])
+bg = pygame.image.load("sprites/background.png")
+bird_image = pygame.image.load("sprites/bird_down.png")
+lower_pipe_image = pygame.image.load("sprites/pipe.png")
+upper_pipe_image = pygame.transform.rotate(pygame.image.load("sprites/pipe.png"),180)
+ground = pygame.image.load("sprites/base.png")
+ground_x = 0
+ground_y = HEIGHT-112
+myfont = pygame.font.SysFont('Comic Sans Ms', 16)
 
 for i in range(POPULATION_SIZE):
     birds.append({'x': 75, 'y': HEIGHT//3, 'alive': True, 'color':(randint(0,255),randint(0,255),randint(0,255)), 'speed_y': 0})
@@ -26,15 +37,16 @@ for i in range(POPULATION_SIZE):
 for i in range(3):
     rand_size = randint(50,242)
     if i == 0:
-        pipes.append(({'x': WIDTH, 'y': 0, 'width': 50, 'height': rand_size},{'x': WIDTH, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+        pipes.append(({'x': WIDTH, 'y': 0, 'width': 52, 'height': rand_size},{'x': WIDTH, 'y': rand_size+100, 'width': 52, 'height': HEIGHT-(rand_size+100)}))
     else:
-        pipes.append(({'x': pipes[i-1][0]['x'] + 200, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 200, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+        pipes.append(({'x': pipes[i-1][0]['x'] + 175, 'y': 0, 'width': 52, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 175, 'y': rand_size+100, 'width': 52, 'height': HEIGHT-(rand_size+100)}))
 
 for i in range(POPULATION_SIZE):
     fitness.append(1)
 
 def restart():
-    global birds
+    global birds, birds_alive_num
+    birds_alive_num = POPULATION_SIZE
     for i in range(len(birds)):
         birds[i]['y'] = HEIGHT//3
         birds[i]['alive'] = True
@@ -45,9 +57,9 @@ def restart():
     for i in range(3):
         rand_size = randint(50,242)
         if i == 0:
-            pipes.append(({'x': WIDTH, 'y': 0, 'width': 50, 'height': rand_size},{'x': WIDTH, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+            pipes.append(({'x': WIDTH, 'y': 0, 'width': 52, 'height': rand_size},{'x': WIDTH, 'y': rand_size+100, 'width': 52, 'height': HEIGHT-(rand_size+100)}))
         else:
-            pipes.append(({'x': pipes[i-1][0]['x'] + 200, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 200, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+            pipes.append(({'x': pipes[i-1][0]['x'] + 175, 'y': 0, 'width': 52, 'height': rand_size},{'x': pipes[i-1][0]['x'] + 175, 'y': rand_size+100, 'width': 52, 'height': HEIGHT-(rand_size+100)}))
 
 
 def birds_alive():
@@ -97,32 +109,62 @@ while running:
         if birds[i]['alive']:
             if population[i].feedForward(inputs)[0] >= 0.5:
                 birds[i]['speed_y'] = MAX_UP_SPEED
+                bird_image = pygame.image.load("sprites/bird_up.png")
+            else:
+                bird_image = pygame.image.load("sprites/bird_down.png")
             if birds[i]['speed_y'] < MAX_DOWN_SPEED:
                 birds[i]['speed_y']+=1
             birds[i]['y']+=birds[i]['speed_y']
-            fitness[i]+=1       
+            fitness[i]+=1
     for i in range(len(pipes)):
         pipes[i][0]['x'] += PIPE_SPEED
         pipes[i][1]['x'] += PIPE_SPEED
     if pipes[0][0]['x'] <= -100:
         rand_size = randint(50,242)
         pipes.pop(0)
-        pipes.append(({'x': pipes[1][0]['x'] + 200, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[1][0]['x'] + 200, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
-
+        pipes.append(({'x': pipes[1][0]['x'] + 175, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[1][0]['x'] + 175, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
+    if ground_x <= -48:
+        ground_x = 0
+    else:
+        ground_x+=PIPE_SPEED
+    for bird in birds:
+        if not bird['alive']:
+            birds_alive_num-=1
     #draw
-    screen.fill((255,255,255))
+    #screen.fill((255,255,255))
+    textSurface1 = myfont.render('Generation : %i'%generation, False, (0,0,255))
+    textSurface2 = myfont.render('Birds Alive : %i'%birds_alive_num, False, (0,0,255))
+    screen.blit(bg,(0,0))
     for i in range(len(birds)):
         if birds[i]['alive']:
-            birds[i]['hitbox'] = pygame.draw.rect(screen,birds[i]['color'],[birds[i]['x']-10,birds[i]['y']-10,20,20])
+            bird_hitbox = bird_image.get_rect()
+            bird_hitbox.left, bird_hitbox.top = birds[i]['x'] , birds[i]['y']
+            birds[i]['hitbox'] = bird_hitbox#pygame.draw.rect(screen,birds[i]['color'],[birds[i]['x']-10,birds[i]['y']-10,20,20])
+            screen.blit(bird_image,birds[i]['hitbox'])
     for i in range(len(pipes)):
-        for j in range(len(pipes[i])):
-            pipes[i][j]['hitbox'] = pygame.draw.rect(screen,(0,255,0),[pipes[i][j]['x'],pipes[i][j]['y'],pipes[i][j]['width'],pipes[i][j]['height']])
-    pygame.draw.rect(screen,(0,200,0),[0,HEIGHT-120,WIDTH,HEIGHT-(HEIGHT-120)])
-
+        upper_pipe_hitbox = upper_pipe_image.get_rect()
+        lower_pipe_hitbox = lower_pipe_image.get_rect()
+        upper_pipe_hitbox.left, upper_pipe_hitbox.top = pipes[i][0]['x'], -320 + pipes[i][0]['height']
+        lower_pipe_hitbox.left, lower_pipe_hitbox.top = pipes[i][1]['x'], pipes[i][1]['y']
+        pipes[i][0]['hitbox'] = upper_pipe_hitbox
+        pipes[i][1]['hitbox'] = lower_pipe_hitbox
+        screen.blit(upper_pipe_image, pipes[i][0]['hitbox'])
+        screen.blit(lower_pipe_image, pipes[i][1]['hitbox'])
+        #for j in range(len(pipes[i])):
+            #pipe_hitbox = pipe_image.get_rect()
+            #pipe_hitbox.left, pipe_hitbox.top = pipes[i][j]['x'], pipes[i][j]['y']
+            #pipes[i][j]['hitbox'] =  pipe_hitbox#pygame.draw.rect(screen,(0,255,0),[pipes[i][j]['x'],pipes[i][j]['y'],pipes[i][j]['width'],pipes[i][j]['height']])
+            #screen.blit(pipe_image,pipes[i][j]['hitbox'])
+    #pygame.draw.rect(screen,(0,200,0),[0,HEIGHT-120,WIDTH,HEIGHT-(HEIGHT-120)])
+    screen.blit(ground,(ground_x,ground_y))
+    screen.blit(textSurface1,(5,HEIGHT - 90))
+    screen.blit(textSurface2,(5,HEIGHT - 70))
+    birds_alive_num = POPULATION_SIZE
     colision_bird()
     if not birds_alive():
+        generation+=1
+        solutions.evolution(fitness.copy())
         restart()
-        solutions.evolution(fitness)
         continue
     
     pygame.display.update()
