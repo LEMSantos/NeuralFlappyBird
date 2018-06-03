@@ -29,7 +29,10 @@ upper_pipe_image = pygame.transform.rotate(pygame.image.load("sprites/pipe.png")
 ground = pygame.image.load("sprites/base.png")
 ground_x = 0
 ground_y = HEIGHT-112
+pipe_count = 0
+allow_to_count = True
 myfont = pygame.font.SysFont('Comic Sans Ms', 16)
+myfont2 = pygame.font.SysFont('Comic Sans Ms', 35)
 
 for i in range(POPULATION_SIZE):
     birds.append({'x': 75, 'y': HEIGHT//3, 'alive': True, 'color':(randint(0,255),randint(0,255),randint(0,255)), 'speed_y': 0})
@@ -45,8 +48,10 @@ for i in range(POPULATION_SIZE):
     fitness.append(1)
 
 def restart():
-    global birds, birds_alive_num
+    global birds, birds_alive_num, pipe_count, allow_to_count
     birds_alive_num = POPULATION_SIZE
+    pipe_count = 0
+    allow_to_count = True
     for i in range(len(birds)):
         birds[i]['y'] = HEIGHT//3
         birds[i]['alive'] = True
@@ -119,9 +124,10 @@ while running:
     for i in range(len(pipes)):
         pipes[i][0]['x'] += PIPE_SPEED
         pipes[i][1]['x'] += PIPE_SPEED
-    if pipes[0][0]['x'] <= -100:
+    if pipes[0][0]['x'] <= -52:
         rand_size = randint(50,242)
         pipes.pop(0)
+        allow_to_count = True
         pipes.append(({'x': pipes[1][0]['x'] + 175, 'y': 0, 'width': 50, 'height': rand_size},{'x': pipes[1][0]['x'] + 175, 'y': rand_size+100, 'width': 50, 'height': HEIGHT-(rand_size+100)}))
     if ground_x <= -48:
         ground_x = 0
@@ -130,10 +136,19 @@ while running:
     for bird in birds:
         if not bird['alive']:
             birds_alive_num-=1
+    for bird in birds:
+        if bird['alive'] and bird['x'] > pipes[0][0]['x'] + 26 and allow_to_count:
+            allow_to_count = False
+            pipe_count+=1
+            break
+            
+            
+            
     #draw
     #screen.fill((255,255,255))
     textSurface1 = myfont.render('Generation : %i'%generation, False, (0,0,255))
     textSurface2 = myfont.render('Birds Alive : %i'%birds_alive_num, False, (0,0,255))
+    textSurface3 = myfont2.render('%i'%pipe_count, False, (255,255,255))
     screen.blit(bg,(0,0))
     for i in range(len(birds)):
         if birds[i]['alive']:
@@ -159,6 +174,7 @@ while running:
     screen.blit(ground,(ground_x,ground_y))
     screen.blit(textSurface1,(5,HEIGHT - 90))
     screen.blit(textSurface2,(5,HEIGHT - 70))
+    screen.blit(textSurface3,(144 - textSurface3.get_width() // 2,20))
     birds_alive_num = POPULATION_SIZE
     colision_bird()
     if not birds_alive():
