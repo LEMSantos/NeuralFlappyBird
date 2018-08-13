@@ -35,7 +35,7 @@ class GeneticSearch:
                 for j in range(len(f1.getNetwork()[i])):
                     for k in range(len(f1.getNetwork()[i][j])):
                         f1.getNetwork()[i][j][k] = p1.getNetwork()[i][j][k] + (p2.getNetwork()[i][j][k] - p1.getNetwork()[i][j][k])*random.uniform(-alpha,1+alpha)
-                        f2.getNetwork()[i][j][k] = p1.getNetwork()[i][j][k] + (p2.getNetwork()[i][j][k] - p1.getNetwork()[i][j][k])*random.uniform(-alpha,1+alpha)
+                        f2.getNetwork()[i][j][k] = p2.getNetwork()[i][j][k] + (p2.getNetwork()[i][j][k] - p1.getNetwork()[i][j][k])*random.uniform(-alpha,1+alpha)
             return (f1,f2)
         else:
             return(p1,p2)

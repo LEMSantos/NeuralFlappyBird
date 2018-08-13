@@ -9,7 +9,7 @@ class NeuralNetwork:
             for j in range(architecture[i]):
                 self.Network[i-1].append([])
                 for k in range(architecture[i-1]+1):
-                    self.Network[i-1][j].append(random.random())
+                    self.Network[i-1][j].append(random.uniform(-0.5,0.5))
 
     def getNetwork(self):
         return self.Network

@@ -21,7 +21,7 @@ pipes = []
 fitness = []
 generation = 1
 birds_alive_num = POPULATION_SIZE
-solutions = GeneticSearch(POPULATION_SIZE,0.8,0.08,[2,6,1])
+solutions = GeneticSearch(POPULATION_SIZE,0.8,0.08,[3,4,1])
 bg = pygame.image.load("sprites/background.png")
 bird_image = pygame.image.load("sprites/bird_down.png")
 lower_pipe_image = pygame.image.load("sprites/pipe.png")
@@ -99,7 +99,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             running = False
-
+    #inputs
     #update
             
     population = solutions.getPopulation()
@@ -108,9 +108,11 @@ while running:
         if birds[i]['x'] > pipes[0][0]['x'] + pipes[0][0]['width']:
             inputs.append(((pipes[1][0]['y'] + pipes[1][0]['height'] + 50) - birds[i]['y'])/HEIGHT)
             inputs.append((pipes[1][0]['x'] - birds[i]['x'])/WIDTH)
+            inputs.append(birds[i]['speed_y']/MAX_DOWN_SPEED)
         else:
             inputs.append(((pipes[0][0]['y'] + pipes[0][0]['height'] + 50) - birds[i]['y'])/HEIGHT)
             inputs.append((pipes[0][0]['x'] - birds[i]['x'])/HEIGHT)
+            inputs.append(birds[i]['speed_y']/MAX_DOWN_SPEED)   
         if birds[i]['alive']:
             if population[i].feedForward(inputs)[0] >= 0.5:
                 birds[i]['speed_y'] = MAX_UP_SPEED
